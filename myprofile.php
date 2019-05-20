@@ -51,11 +51,11 @@ include 'include/user.php';
         $withdrawal_process_day = $data['withdrawal_process_day'];
 
         //get all reservation
-        $sql = "SELECT * FROM trip_reservation WHERE trip_id in (SELECT trip_id from trips WHERE users_user_id='".$_SESSION["userID"]."')";
+        $sql = "SELECT * FROM trip_reservation WHERE trip_res_withdraw_id is NULL AND trip_id in (SELECT trip_id from trips WHERE users_user_id='".$_SESSION["userID"]."')";
         $result = $conn->query($sql);
         $total_in = 0.0;
         while($row=$result->fetch_assoc()){
-          $total_in = $total_in + ($row["trip_res_fee"]-$row["trip_res_guide_com"]);
+          $total_in = $total_in + ($row["trip_res_fee"]-$row["trip_res_cust_com"]-$row["trip_res_guide_com"]);
         }
 
         //get all withdraw
@@ -63,26 +63,64 @@ include 'include/user.php';
         $result = $conn->query($sql);
         $total_out = 0.0;
         while($row=$result->fetch_assoc()){
-          $total_out = $total_out + $row["withdraw_amt"];
+          $total_out = $total_out + $row["amount"];
         }
 
         //  get all booking
-        $sql = "SELECT * FROM trips";
+        $sql = "SELECT * FROM trips where users_user_id='".$_SESSION['userID']."'";
         $result = $conn->query($sql);
-        $total_trips = 0;
+        $per_total_trips = 0;
         while($row=$result->fetch_assoc()){
-          $total_trips = $total_trips+1;
+          $per_total_trips = $per_total_trips+1;
+        }
+      
+        $sql = "SELECT * FROM trip_reservation where trip_id in (SELECT trip_id from trips WHERE users_user_id='".$_SESSION["userID"]."')";
+        $result = $conn->query($sql);
+        $per_total_res = 0;
+        while($row=$result->fetch_assoc()){
+          $per_total_res = $per_total_res+1;
         }
 
-        $sql = "SELECT * FROM trip_reservation";
-        $result = $conn->query($sql);
-        $total_res = 0;
-        while($row=$result->fetch_assoc()){
-          $total_res = $total_res+1;
-        }
+           //  get all booking
+           $sql = "SELECT * FROM trips ";
+           $result = $conn->query($sql);
+           $total_trips = 0;
+           while($row=$result->fetch_assoc()){
+             $total_trips = $total_trips+1;
+           }
+         
+           $sql = "SELECT * FROM trip_reservation";
+           $result = $conn->query($sql);
+           $total_res = 0;
+           while($row=$result->fetch_assoc()){
+             $total_res = $total_res+1;
+           }
 
         $sql = "SELECT * FROM withdraw where user_id='".$_SESSION['userID']."'";
         $result_withdraw = $conn->query($sql);
+
+        $sql = "SELECT * FROM withdraw where status='0'";
+        $result_all_withdraw = $conn->query($sql);
+
+        //get all reservation
+        $sql = "SELECT * FROM trip_reservation";
+        $result = $conn->query($sql);
+        $total_reservation = 0.0;
+        $total_cust_com = 0.0;
+        $total_guide_com = 0.0;
+        while($row=$result->fetch_assoc()){
+          $total_reservation = $total_reservation + $row['trip_res_fee'];
+          $total_cust_com = $total_cust_com + $row['trip_res_cust_com'];
+          $total_guide_com = $total_guide_com + $row['trip_res_guide_com'];
+        }
+
+        $sql = "SELECT * FROM withdraw where status='2'";
+        $result = $conn->query($sql);
+        $total_paid_out = 0.0;
+        while($row=$result->fetch_assoc()){
+          $total_paid_out = $total_paid + $row["amount"];
+        }
+
       $conn->close();
     }
     
@@ -207,40 +245,58 @@ include 'include/user.php';
         </div>
         <div class="tab-content tab-space">
         <div class="tab-pane active dashboard" id="dashboard">
-            <div class="row">
+        <div class="row">
               <div class="col-md-7 ml-auto mr-auto ">
-                <h4 class="title">Wallet</h4>
+                <h4 class="title">Website Wallet</h4>
                 <div class="row collections">
                   <div class="col-md-6">
                     <div class="card card-background">
                       <a href="#pablo"></a>
                       <div class="card-body">
-                        <h2><label class="badge badge-warning" style="font-size:16px;">Current Balance</label></h2><br/><br/>
+                        <h2><label class="badge badge-warning" style="font-size:16px;">Total Paid In</label></h2><br/><br/>
                         <a href="#pablo">
-                          <h3 class="title"><?php echo number_format($total_in-$total_out,2);?>&nbsp;USD</h3>
+                          <h3 class="title"><?php echo number_format($total_reservation,2);?>&nbsp;THB</h3>
                         </a>
+                  </div>
                       </div>
                     </div>
+                    <div class="col-md-6">
+                    <div class="card card-background">
+                      <a href="#pablo"></a>
+                      <div class="card-body">
+                        <h2><label class="badge badge-warning" style="font-size:16px;">Total Pay Out</label></h2><br/><br/>
+                        <a href="#pablo">
+                          <h3 class="title"><?php echo number_format($total_paid_out,2);?>&nbsp;THB</h3>
+                        </a>
                   </div>
-                  <?php
-                    // if (($total_in-$total_out)>$withdrawal_minimum){
-                      if(1){
-                  echo "<div class=\"col-md-6\">
-                        <div class=\"form-group\">
-                          <h6 class=\"title\">Get Paid</h6>
-                          <div class=\"input-group\">
-                            <input type=\"text\" class=\"form-control\" value=\"0.00\" id=\"withdraw_amt\" /> USD
-                          </div>
-                          <div class=\"col-md-6 ml-auto\">
-                          <button type=\"button\" class=\"btn btn-success btn-sm\" id=\"getpaid\" onclick='getPaid();'>Withdraw</button>
-                          </div>
-                        </div>
-                  </div>";
-                    }?>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                    <div class="card card-background">
+                      <a href="#pablo"></a>
+                      <div class="card-body">
+                        <h2><label class="badge badge-warning" style="font-size:16px;">Total Booking Fee</label></h2><br/><br/>
+                        <a href="#pablo">
+                          <h3 class="title"><?php echo number_format($total_cust_com,2);?>&nbsp;THB</h3>
+                        </a>
+                  </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                    <div class="card card-background">
+                      <a href="#pablo"></a>
+                      <div class="card-body">
+                        <h2><label class="badge badge-warning" style="font-size:16px;">Total Trip Benefit</label></h2><br/><br/>
+                        <a href="#pablo">
+                          <h3 class="title"><?php echo number_format($total_guide_com,2);?>&nbsp;THB</h3>
+                        </a>
+                  </div>
+                      </div>
+                    </div>
                 </div>
               </div>
               <div class="col-md-2 mr-auto ml-auto stats">
-                <h4 class="title">Stats</h4>
+                <h4 class="title">Website Stats</h4>
                 <ul class="list-unstyled">
                   <li>
                     <b><?php echo $total_res;?></b> Bookings</li>
@@ -260,12 +316,60 @@ include 'include/user.php';
                 <span class="badge badge-rose">Luxury</span> -->
               </div>
             </div>
+            <hr>
+            <div class="row">
+              <div class="col-md-7 ml-auto mr-auto ">
+                <h4 class="title">Personal Wallet</h4>
+                <div class="row collections">
+                  <div class="col-md-6">
+                    <div class="card card-background">
+                      <a href="#pablo"></a>
+                      <div class="card-body">
+                        <h2><label class="badge badge-warning" style="font-size:16px;">Current Balance</label></h2><br/><br/>
+                        <a href="#pablo">
+                          <h3 class="title"><?php echo number_format($total_in,2);?>&nbsp;THB</h3>
+                        </a>
+                        <?php
+                        if($total_in >= $withdrawal_minimum){
+                    echo "
+                          <button type=\"button\" class=\"btn btn-success btn-sm\" id=\"getpaid\" onclick='getPaid();'>Withdraw</button>
+                     
+                  ";}else{
+                    echo "Minimum amount for withdrawal is ".$withdrawal_minimum." THB.";
+                  }
+                  ?>
+                  </div>
+                      </div>
+                    </div>
+                </div>
+              </div>
+              <div class="col-md-2 mr-auto ml-auto stats">
+                <h4 class="title">Personal Stats</h4>
+                <ul class="list-unstyled">
+                  <li>
+                    <b><?php echo $per_total_res;?></b> Bookings</li>
+                  <li>
+                    <b><?php echo $per_total_trips;?></b> Trips</li>
+                  <!-- <li>
+                    <b>331</b> Influencers</li>
+                  <li>
+                    <b>1.2K</b> Likes</li> -->
+                </ul>
+                <!-- <hr>
+                <h4 class="title">About his Work</h4>
+                <p class="description">French luxury footwear and fashion. The footwear has incorporated shiny, red-lacquered soles that have become his signature.</p>
+                <hr>
+                <h4 class="title">Focus</h4>myprofile.php
+                <span class="badge badge-primary">Footwear</span>
+                <span class="badge badge-rose">Luxury</span> -->
+              </div>
+            </div>
           
             <?php 
                 $num_row = mysqli_num_rows($result_withdraw);
                 if ($num_row > 0 )
                 {
-            echo "<hr>
+            echo "
             <div class=\"row\">
               <div class=\"col-md-9 ml-auto mr-auto\">
               <h4 class=\"title\">Transactions</h4>
@@ -276,6 +380,7 @@ include 'include/user.php';
                       <th>Withdraw Amount (THB)</th>
                       <th>Date</th>
                       <th>Status</th>
+                      <th><th>
                     </tr> 
                   </thead>
                   <tbody>";
@@ -283,7 +388,7 @@ include 'include/user.php';
                     if($row['status']==0){
                       $status_text = 'In review';
                     }else if($row['status']==1){
-                      $status_text = 'Rejected';
+                      $status_text = 'Cancled ';
                     }
                     else{
                       $status_text = 'Completed';
@@ -294,17 +399,66 @@ include 'include/user.php';
                             <td>".$dt."</td>
                             <td>".$status_text."</td>
                     ";
+                    if ($row['status']==0){
+                      echo "<td><button type=\"button\" rel=\"tooltip\" class=\"btn btn-danger btn-round\" onclick=\"cancle_withdraw(".$row['withdraw_id'].");\"
+                            <i class=\"material-icons\">Cancle</i></button></td>";
+                    }else{
+                      echo "<td></td>";
+                    }
                   }
 
                  echo" </tbody>
                 </table>
               </div>
+            </div>
             </div>";
                 }
                 ?>
-
-            </div>
+            
           </div>
+        <div class="tab-pane verify_withdraw" id="verify_withdraw">
+            <div class="col-md-9 mr-auto ml-auto">
+            <div class="row">
+            <?php 
+                $num_row = mysqli_num_rows($result_all_withdraw);
+                if ($num_row > 0 )
+                {
+            echo "
+              <h4 class=\"title\">Transactions</h4>
+              <div class=\"table-responsive\">
+                <table class=\"table table-shopping\">
+                  <thead>
+                    <tr>
+                      <th>Withdraw Amount (THB)</th>
+                      <th>Date</th>
+                      <th><th>
+                    </tr> 
+                  </thead>
+                  <tbody>";
+                  while($row=$result_all_withdraw->fetch_assoc()){
+                          $dt = date('d/m/Y - H:i',strtotime($row['datetime']));
+                    echo "<tr>
+                            <td>".$row['amount']."</td>
+                            <td>".$dt."</td>
+                    ";
+                   
+                      echo "<td>
+                                 <button type=\"button\" rel=\"tooltip\" class=\"btn btn-success btn-round\" onclick=\"complete_withdraw(".$row['withdraw_id'].");\"
+                            <i class=\"material-icons\">Complete</i></button>
+                      
+                      <button type=\"button\" rel=\"tooltip\" class=\"btn btn-danger btn-round\" onclick=\"cancle_withdraw(".$row['withdraw_id'].");\"
+                            <i class=\"material-icons\">Cancle</i></button></td>";
+                    
+                  }
+
+                 echo" </tbody>
+                </table>
+              </div>";
+                }
+                ?>
+                </div>
+            </div>
+         </div>
           <div class="tab-pane documents" id="documents">
             <div class="row">
               <div class="col-md-7 ml-auto mr-auto">
@@ -792,19 +946,66 @@ include 'include/user.php';
       }
     </script>
     <script>
+      function cancle_withdraw(withdraw_id){
+        var r = confirm('Are you sure to cancle this withdrawal?');
+        if (r==true)
+        {
+          var form_cancle = new FormData();
+          form_cancle.append('withdraw_id',withdraw_id);
+          form_cancle.append('method','cancle');
+          $.ajax({
+            url: 'withdraw_backend.php', 
+            dataType: 'text',  // what to expect back from the PHP script, if anything
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_cancle,                   
+            type: 'post',
+            success: function(msg){
+              if (msg.length<10){
+              
+                  location.reload();
+              }else{
+                  alert("Error: " + msg);
+              }
+            }
+          });
+        }
+      }
+
+      function complete_withdraw(withdraw_id){
+        var r = confirm('Are you sure to change this status to COMPLETE?');
+        if (r==true)
+        {
+          var form_complete = new FormData();
+          form_complete.append('withdraw_id',withdraw_id);
+          form_complete.append('method','complete');
+          $.ajax({
+            url: 'withdraw_backend.php', 
+            dataType: 'text',  // what to expect back from the PHP script, if anything
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_complete,                   
+            type: 'post',
+            success: function(msg){
+              if (msg.length<10){
+                
+                  location.reload();
+              }else{
+                  alert("Error: " + msg);
+              }
+            }
+          });
+        }
+      }
+
       function getPaid(){
-      <?php echo "var valid_amt=".($total_in - $total_out).";\n";?>
+      <?php echo "var amt=".($total_in).";\n";?>
       <?php echo "var min_amt=".$withdrawal_minimum.";\n";?>
       <?php echo "var days=".$withdrawal_process_day.";\n";?>
       <?php echo "var user_id='".$_SESSION['userID']."';\n";?>
 
-        var amt = $('#withdraw_amt').val();
-        amt = amt.split(',').join('');
-        // if (amt > valid_amt){
-        //   alert('Your withdraw amount exceed your valid amount!!!');
-        // }else if(amt < min_amt){
-        //   alert('Your withdraw amount is lower than minimum withdrawable amount!!!');
-        // }else{
           var form_withdraw = new FormData();
           form_withdraw.append('user_id',user_id);
           form_withdraw.append('withdraw_amt',amt);
@@ -825,8 +1026,6 @@ include 'include/user.php';
             }
           }
         });
-
-        // }
 
       }
     </script>

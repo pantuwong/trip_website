@@ -2,6 +2,11 @@
     session_start();
     require_once("functions.php");
     include("db_connect.php");
+    $newtrip = True;
+    if (isset($_SESSION['trip_id'])){
+	    $newtrip = False;
+	    $trip_id = $_SESSION['trip_id'];
+    }
     if (isset($_POST['tab']) && $_POST['tab']=='basic')
     {
         $users_user_id = $_POST['users_user_id'];
@@ -12,7 +17,7 @@
         $trip_dest = addslashes($_POST['trip_dest']);
         $trip_activity = addslashes($_POST['trip_activity']);
         $trip_cover = $_POST['trip_cover'];
-        if($_SESSION['trip_id']==0)
+        if($newtrip)
         {
             $sql = "INSERT INTO trips (trip_type_id, vehicle_id, users_user_id, trip_name, trip_sum, trip_dest, trip_activity, trip_cover ) VALUES ('".$trip_type_id."','".$vehicle_id."','".$users_user_id."','".$trip_name."','".$trip_sum."','".$trip_dest."','".$trip_activity."','".$trip_cover."')";
         
@@ -21,31 +26,33 @@
             $sql = "SELECT * from trips WHERE trip_id='".$_SESSION['trip_id']."'";
             $result = $conn->query($sql);
             $data = $result->fetch_assoc();
-            $trip_cover_old = $data['trip_cover'];
-            $filename = 'upload/'.$trip_cover_old;
-            unlink($filename);
+	    $trip_cover_old = $data['trip_cover'];
+	    if ($trip_cover_old != $trip_cover){
+            	$filename = 'upload/'.$trip_cover_old;
+	            unlink($filename);
+	    }
             $sql = "UPDATE trips SET trip_status='0', trip_ver_reason='', trip_type_id='".$trip_type_id."', vehicle_id='".$vehicle_id."', users_user_id='".$users_user_id."', trip_name='".$trip_name."',trip_sum='".$trip_sum."',trip_dest='".$trip_dest."',trip_activity='".$trip_activity."', trip_cover='".$trip_cover."' WHERE trip_id = '".$trip_id."'";
         }
     
         if ($conn->query($sql) === TRUE) 
         {
-            if($_SESSION['trip_id']===0)
+            if(!isset($_SESSION['trip_id']))
             {
                 $_SESSION['trip_id'] = $conn->insert_id;
             }
-            echo "Success";
+            echo "success";
         } else {
             echo "Error: " . $sql . "<br>" . $conn->error;
         }
     }else if (isset($_POST['tab']) && $_POST['tab']=='overview'){
         $fileList = json_decode($_POST['fileList']);
         
-        if($_SESSION['trip_id']==0)
+        if($newtrip)
         {
             $sql = "INSERT INTO trips () VALUES ()";
             $conn->query($sql);
             $_SESSION['trip_id'] = $conn->insert_id;
-            $trip_id = $_SESSION['trip_id'];
+            $trip_id = $conn->insert_id;
         }else{
             $trip_id = $_SESSION['trip_id'];
             $sql = "DELETE FROM trip_photo where trip_id='".$trip_id."'";
@@ -73,12 +80,12 @@
         $trip_meeting_lat = $_POST['meeting_lat'];
         $trip_meeting_lng = $_POST['meeting_lng'];
         $trip_num_day = $_POST['num_day'];
-        if($_SESSION['trip_id']==0)
+        if($newtrip)
         {
             $sql = "INSERT INTO trips ( trip_meeting_addr, trip_meeting_lat, trip_meeting_lng, trip_num_day ) VALUES ('".$trip_meeting_addr."','".$trip_meeting_lat."','".$trip_meeting_lng."','".$trip_num_day."')";
             $conn->query($sql);
             $_SESSION['trip_id'] = $conn->insert_id;
-            $trip_id = $_SESSION['trip_id'];
+            $trip_id = $conn->insert_id;
         
         }else{
             $trip_id = $_SESSION['trip_id'];
@@ -128,12 +135,12 @@
             array_push($price_unit, $price_unit_array[$i]);
             array_push($price_total, $price_total_array[$i]);
         }
-        if($_SESSION['trip_id']==0)
+        if($newtrip)
         {
             $sql = "INSERT INTO trips ( ) VALUES ()";
             $conn->query($sql);
             $_SESSION['trip_id'] = $conn->insert_id;
-            $trip_id = $_SESSION['trip_id'];
+            $trip_id = $conn->insert_id;
         
         }else{
             $trip_id = $_SESSION['trip_id'];
@@ -163,12 +170,12 @@
         $seasonal = $_POST['seasonal'];
         $dates = explode(",",$_POST['dates']);
         
-        if($_SESSION['trip_id']==0)
+        if($newtrip)
         {
             $sql = "INSERT INTO trips (trip_condition_casual, trip_condition_physical, trip_condition_vegan, trip_condition_children, trip_condition_flexible, trip_condition_seasonal) VALUES ('".$casual."','".$physical."','".$vegan."','".$children."','".$flexible."','".$seasonal."')";
             $conn->query($sql);
             $_SESSION['trip_id'] = $conn->insert_id;
-            $trip_id = $_SESSION['trip_id'];
+            $trip_id = $conn->insert_id;
         
         }else{
             $trip_id = $_SESSION['trip_id'];

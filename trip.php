@@ -954,7 +954,7 @@ if (session_status() == PHP_SESSION_NONE) {
       }else{
         var cust_com = (adult_price + children_price) * (customer_commission/100);
         var guide_com = (adult_price + children_price) * (guide_commission/100);
-        var urlText = "trip_detail.php?trip_id="+trip_id+"&num_adult="+num_adult+"&num_children="+num_children+"&adult_price="+adult_price+"&children_price="+children_price+"&date="+dates+"&cust_com="+cust_com.toFixed(2)+"&guide_com="+guide_commission.toFixed(2);
+        var urlText = "trip_detail.php?trip_id="+trip_id+"&num_adult="+num_adult+"&num_children="+num_children+"&adult_price="+adult_price+"&children_price="+children_price+"&date="+dates+"&cust_com="+cust_com.toFixed(2)+"&guide_com="+guide_com.toFixed(2);
         window.location = urlText;
       }
     }

@@ -18,6 +18,9 @@
       $sql = "SELECT * from trips WHERE trip_id='".$_SESSION['trip_id']."'";
       $result = $conn->query($sql);
       $data = $result->fetch_assoc();
+      if ($data['users_user_id']!=$_SESSION['userID']){
+        exit("Don't hack!! You must be an owner of this trip");
+      }
       $trip_type_id = $data['trip_type_id'];
       $vehicle_id = $data['vehicle_id'];
       $trip_name = $data['trip_name'];
