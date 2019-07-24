@@ -411,7 +411,7 @@
                           <div class="row">
                             <div class="container">
                               <select class="selectpicker" data-style="select-with-transition" title="Title" id="res_title">
-                                <option disabled>Choose your title</option>
+                                <option>Choose your title</option>
                                 <option value="Mr.">Mr.</option>
                                 <option value="Mrs.">Mrs.</option>
                                 <option value="Ms.">Ms.</option>
@@ -421,24 +421,24 @@
                           <div class="row">
                             <div class="col-md-6 col-sm-6">
                               <div class="form-group">
-                                <input type="text" class="form-control" id="res_fn" placeholder="Firstname" value="<?php echo $firstname; ?>" disabled>
+                                <input type="text" class="form-control" id="res_fn" placeholder="Firstname" value="<?php echo $firstname; ?>" >
                               </div>
                             </div>
                             <div class="col-md-6 col-sm-6">
                               <div class="form-group">
-                                <input type="text" class="form-control" id="res_ln" placeholder="Lastname" value="<?php echo $lastname; ?>" disabled>
+                                <input type="text" class="form-control" id="res_ln" placeholder="Lastname" value="<?php echo $lastname; ?>" >
                               </div>
                             </div>
                           </div>
                           <div class="row">
                             <div class="col-md-6 col-sm-6">
                               <div class="form-group">
-                                <input type="text" class="form-control" id="email" placeholder="Email" value="<?php echo $email; ?>" disabled>
+                                <input type="text" class="form-control" id="email" placeholder="Email" value="<?php echo $email; ?>" >
                               </div>
                             </div>
                             <div class="col-md-6 col-sm-6">
                               <div class="form-group">
-                                <input type="text" class="form-control" id="mobile" placeholder="Mobile ( with country code )" value="<?php echo $phone; ?>" disabled>
+                                <input type="text" class="form-control" id="mobile" placeholder="Mobile ( with country code )" value="<?php echo $phone; ?>" >
                               </div>
                             </div>
                           </div>
@@ -813,8 +813,9 @@
       <?php
           echo "var adult_price=".$adult_price.";";
           echo "var children_price=".$children_price.";";
+          echo "var cust_comm=".$cust_comm.";";
       ?>
-      trip_fee = adult_price + children_price
+      trip_fee = adult_price + children_price + cust_comm;
 
       return actions.order.create({
         purchase_units: [{
